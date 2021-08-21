@@ -1,5 +1,16 @@
 package grpcdial
 
+import (
+	"context"
+	"crypto/tls"
+	"net"
+	"net/url"
+	"strings"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+)
+
 func Conn(ctx context.Context, remote string, popts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	remote = strings.TrimSpace(remote)
 	if remote == "" {
