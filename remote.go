@@ -99,3 +99,10 @@ func WithAccessOption(access string) credentials.PerRPCCredentials {
 		"access": access,
 	})
 }
+
+func MaybeWithAccessTokenOptions(accessToken string, opts ...grpc.DialOption) []grpc.DialOption {
+	if accessToken != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(WithAccessOption(accessToken)))
+	}
+	return opts
+}
