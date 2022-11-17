@@ -71,3 +71,22 @@ func parseURL(remote string) (result dialOpts, err error) {
 	result.host = destURL.Hostname()
 	return result, nil
 }
+
+type simpleMapOption struct {
+	values map[string]string
+}
+
+func (s simpleMapOption) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	if len(s.values) == 0 {
+		return nil, nil
+	}
+	return s.values, nil
+}
+
+func (s simpleMapOption) RequireTransportSecurity() bool {
+	return false
+}
+
+func WithMapOption(value map[string]string) credentials.PerRPCCredentials {
+	return simpleMapOption{value}
+}
