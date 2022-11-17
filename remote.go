@@ -90,3 +90,12 @@ func (s simpleMapOption) RequireTransportSecurity() bool {
 func WithMapOption(value map[string]string) credentials.PerRPCCredentials {
 	return simpleMapOption{value}
 }
+
+func WithAccessOption(access string) credentials.PerRPCCredentials {
+	if access == "" {
+		return nil
+	}
+	return WithMapOption(map[string]string{
+		"access": access,
+	})
+}
