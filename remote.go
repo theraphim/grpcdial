@@ -9,6 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func Conn(ctx context.Context, remote string, popts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -30,13 +31,13 @@ func Conn(ctx context.Context, remote string, popts ...grpc.DialOption) (*grpc.C
 	if do.tls {
 		opts = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{}))}
 	} else {
-		opts = []grpc.DialOption{grpc.WithInsecure()}
+		opts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	}
 	if len(popts) != 0 {
 		opts = append(opts, popts...)
 	}
 	muxb := do.host + ":" + do.port
-	return grpc.DialContext(ctx, muxb, opts...)
+	return grpc.NewClient(muxb, opts...)
 }
 
 type errNoURL struct{}
