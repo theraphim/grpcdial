@@ -19,13 +19,14 @@ func Conn(ctx context.Context, remote string, popts ...grpc.DialOption) (*grpc.C
 	}
 	do, err := parseURL(remote)
 	if err != nil {
-		do.host, do.port, err = net.SplitHostPort(remote)
+		_, port, err := net.SplitHostPort(remote)
 		if err != nil {
 			return nil, err
 		}
-		if do.port == "443" {
+		if port == "443" {
 			do.tls = true
 		}
+		do.remote = remote
 	}
 	var opts []grpc.DialOption
 	if do.tls {
@@ -36,8 +37,7 @@ func Conn(ctx context.Context, remote string, popts ...grpc.DialOption) (*grpc.C
 	if len(popts) != 0 {
 		opts = append(opts, popts...)
 	}
-	muxb := do.host + ":" + do.port
-	return grpc.NewClient(muxb, opts...)
+	return grpc.NewClient(do.remote, opts...)
 }
 
 type errNoURL struct{}
@@ -45,8 +45,8 @@ type errNoURL struct{}
 func (errNoURL) Error() string { return "not an url" }
 
 type dialOpts struct {
-	host, port string
-	tls        bool
+	remote string
+	tls    bool
 }
 
 func parseURL(remote string) (result dialOpts, err error) {
@@ -55,21 +55,25 @@ func parseURL(remote string) (result dialOpts, err error) {
 		return result, err
 	}
 
-	result.port = destURL.Port()
 	switch destURL.Scheme {
+	case "unix":
+		result.remote = remote
 	case "https":
-		if result.port == "" {
-			result.port = "443"
+		port := destURL.Port()
+		if port == "" {
+			port = "443"
 		}
+		result.remote = destURL.Hostname() + ":" + port
 		result.tls = true
 	case "http":
-		if result.port == "" {
-			result.port = "80"
+		port := destURL.Port()
+		if port == "" {
+			port = "80"
 		}
+		result.remote = destURL.Hostname() + ":" + port
 	default:
 		return result, errNoURL{}
 	}
-	result.host = destURL.Hostname()
 	return result, nil
 }
 
